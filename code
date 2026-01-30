@@ -1,0 +1,112 @@
+# =====================================================
+# TASK 10: KNN – HANDWRITTEN DIGIT CLASSIFICATION
+# =====================================================
+
+# 1. Import required libraries
+import numpy as np
+import matplotlib.pyplot as plt
+
+from sklearn.datasets import load_digits
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import StandardScaler
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.metrics import accuracy_score, confusion_matrix, ConfusionMatrixDisplay
+
+# -----------------------------------------------------
+# 2. Load digits dataset
+# -----------------------------------------------------
+digits = load_digits()
+
+X = digits.data        # Features (64 pixels)
+y = digits.target      # Labels (0–9)
+
+print("Dataset Shape:", X.shape)
+print("Target Shape:", y.shape)
+
+# -----------------------------------------------------
+# 3. Visualize sample digit images
+# -----------------------------------------------------
+plt.figure(figsize=(8, 3))
+for i in range(5):
+    plt.subplot(1, 5, i + 1)
+    plt.imshow(digits.images[i], cmap='gray')
+    plt.title(f"Label: {y[i]}")
+    plt.axis('off')
+plt.suptitle("Sample Handwritten Digits")
+plt.show()
+
+# -----------------------------------------------------
+# 4. Train-test split
+# -----------------------------------------------------
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y,
+    test_size=0.2,
+    random_state=42,
+    stratify=y
+)
+
+# -----------------------------------------------------
+# 5. Feature Scaling (IMPORTANT for KNN)
+# -----------------------------------------------------
+scaler = StandardScaler()
+X_train = scaler.fit_transform(X_train)
+X_test = scaler.transform(X_test)
+
+# -----------------------------------------------------
+# 6. Train KNN with different K values
+# -----------------------------------------------------
+k_values = [3, 5, 7, 9]
+accuracies = []
+
+for k in k_values:
+    knn = KNeighborsClassifier(n_neighbors=k)
+    knn.fit(X_train, y_train)
+    y_pred = knn.predict(X_test)
+    acc = accuracy_score(y_test, y_pred)
+    accuracies.append(acc)
+    print(f"K = {k}, Accuracy = {acc:.4f}")
+
+# -----------------------------------------------------
+# 7. Plot Accuracy vs K
+# -----------------------------------------------------
+plt.figure(figsize=(6, 4))
+plt.plot(k_values, accuracies, marker='o')
+plt.xlabel("K Value")
+plt.ylabel("Accuracy")
+plt.title("Accuracy vs K in KNN")
+plt.grid(True)
+plt.show()
+
+# -----------------------------------------------------
+# 8. Train final model with best K
+# -----------------------------------------------------
+best_k = k_values[accuracies.index(max(accuracies))]
+print("\nBest K value:", best_k)
+
+final_knn = KNeighborsClassifier(n_neighbors=best_k)
+final_knn.fit(X_train, y_train)
+
+# -----------------------------------------------------
+# 9. Confusion Matrix
+# -----------------------------------------------------
+y_final_pred = final_knn.predict(X_test)
+
+cm = confusion_matrix(y_test, y_final_pred)
+disp = ConfusionMatrixDisplay(confusion_matrix=cm)
+disp.plot(cmap='Blues')
+plt.title("Confusion Matrix – KNN Digit Classification")
+plt.show()
+
+# -----------------------------------------------------
+# 10. Show predictions on test images
+# -----------------------------------------------------
+plt.figure(figsize=(8, 3))
+for i in range(5):
+    plt.subplot(1, 5, i + 1)
+    plt.imshow(X_test[i].reshape(8, 8), cmap='gray')
+    plt.title(f"Pred: {y_final_pred[i]}")
+    plt.axis('off')
+plt.suptitle("Sample Predictions")
+plt.show()
+
+print("\nTask 10 completed successfully!")
